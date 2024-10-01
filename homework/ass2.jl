@@ -1,6 +1,6 @@
 using JuMP, HiGHS
 
-epsilon = 1 # Stopping condition
+epsilon = 10 # Stopping condition
 
 c  = [10 12 11 10 9 5 5 11]
 c1 = [10 12 11 10]
@@ -45,15 +45,15 @@ function SUB(subA,subc, subD, sube, y, v)
     return vec(value.(newX)), objective
 end
 
-function RMP(x1, x2, iter1, iter2)
+function RMP(x1, x2)
     RMP = Model(HiGHS.Optimizer)
     P1 = size(x1,1)
-    p1 = size(x1,2)
+    p1 = size(x1,2) # iter1
     P2 = size(x2,1)
-    p2 = size(x2,2)
+    p2 = size(x2,2) # iter2
 
-    @variable(RMP, lambda1[1:iter1]>=0)
-    @variable(RMP, lambda2[1:iter2]>=0)
+    @variable(RMP, lambda1[1:p1]>=0)
+    @variable(RMP, lambda2[1:p2]>=0)
     @objective(RMP, Max, sum( sum( (c1[k]*x1[k,i]) for k in 1:P1)
                               *lambda1[i] for i in 1:p1) + 
                          sum( sum( (c2[k]*x2[k,i]) for k in 1:P2)
@@ -62,13 +62,12 @@ function RMP(x1, x2, iter1, iter2)
     @constraint(RMP, coupling[k in 1:rowA], sum( sum(A[k,j]*x1[j,i] for j in 1:P1)*lambda1[i] for i in 1:p1) +
                                             sum( sum(A[k,j]*x2[j,i] for j in 1:P2)*lambda2[i] for i in 1:p2) <= b[k])
     @constraint(RMP, convex1, sum(lambda1) == 1)
-    @constraint(RMP, convex2, sum(lambda2) == 1)
+    @constraint(RMP, convex2, sum(lambda2) == 1) 
     optimize!(RMP)
     
     yDualVar = [dual(coupling[i]) for i in 1:rowA]
-    vDualVar = [dual(convex1);dual(convex2)]
+    vDualVar = [dual(convex1); dual(convex2)]
     #lambda   = [vec(value.(lambda1)) vec(value.(lambda2))]
-    #print("Lambda: ", size(lambda))
     return yDualVar, vDualVar, value.(lambda1), value.(lambda2)
 end
 
@@ -76,28 +75,40 @@ x1 = zeros(4,1) # Start point
 x2 = zeros(4,1) # Start point
 iter1 = 1
 iter2 = 1
-for maxIter in 1:20
-    y,v,lambda1,lambda2 = RMP(x1, x2, iter1, iter2)
+# Solve main problem
+y,v,lambda1,lambda2 = RMP(x1, x2)
 
-    #print(value.(lambda))
-    global new_x1, C_p1 = SUB(A1, c1, D1, e1, y, v[1])
-    global new_x2, C_p2 = SUB(A2, c2, D2, e2, y, v[2])
+for maxIter in 1:5
+    
+    # Solve sub problem
+    new_x1, C_p1 = SUB(A1, c1, D1, e1, y, v[1])
+    new_x2, C_p2 = SUB(A2, c2, D2, e2, y, v[2])
+
+    print("\nReduced cost1: ", C_p1)
+    print("\nReduced cost2: ", C_p2,"\n\n")
 
     if C_p1 > epsilon
         global iter1 = iter1 + 1
         global x1 = [x1 new_x1]
     end
-    if C_p2 <= epsilon
+    if C_p2 > epsilon
         global iter2 = iter2 + 1
         global x2 = [x2 new_x2]
     end
-    y,v,lambda1,lambda2 = RMP(x1, x2, iter1, iter2)
+    
+    print("\nx values: ")
+    display(x1)
+    display(x2)
+    global y,v,lambda1,lambda2 = RMP(x1, x2)
+    print("\nDual varible (y): ", y)
+    print("\nDual variable (v):", v)
 
-    global convCombX = [sum(x1[:,i]*lambda1[i] for i in 1:iter1);
-                        sum(x2[:,i]*lambda2[i] for i in 1:iter2)]
-                        
-    print("\nx value:", convCombX)
-    print("Optimal value: ", c*convCombX,"\n")
+    convCombX = [sum(x1[:,i]*lambda1[i] for i in 1:iter1);
+                 sum(x2[:,i]*lambda2[i] for i in 1:iter2)]
+
+    print("\nSize of x array: ", size(x1,2) + size(x2,2))
+    print("\nx values:", convCombX)
+    print("\nOptimal value: ", c*convCombX,"\n")
     if (C_p1 <= epsilon && C_p2 <= epsilon)
         break;
     end
