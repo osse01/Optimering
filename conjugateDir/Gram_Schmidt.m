@@ -1,9 +1,9 @@
-%% min f(x) = x'Qx - b'x using conjugate directions
+%% min f(x) = 1/2 x'Qx - b'x using conjugate directions
 % Starting with the unit vectors as start directions
 
-Q = [1   1   1;
-     1   2  -1/2;
-     0 -1/2  1 ]
+Q = [2   2   0;
+     2   4  -1;
+     0 -1  2 ]
 b = [-1 -3 1]';
 
 xi = [[1 0 0]' [0 1 0]' [0 0 1]']; % Start with unit vectors
