@@ -33,7 +33,7 @@ while norm(g(x_curr)) >= epsilon
     % the right endpoint x2, fminbnd never evaluates fun at the endpoints, so fun
     % need only be defined for x in the interval x1 < x < x2.
     % https://se.mathworks.com/help/matlab/ref/fminbnd.html
-    alpha_opt = fminbnd(phi, 0, 1e6);
+    alpha_opt = fminbnd(phi, 0, 1e6)
     
     % Update point
     x_prev = x_curr;
