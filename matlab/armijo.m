@@ -5,7 +5,7 @@ clc
 
 % Variables
 x_curr = [0, 3]';       % Initial guess.
-epsilon = 1e-3;         % Error tolerance.
+epsilon = 1e-5;         % Error tolerance.
 sigma = 0.5;            % Must be in [0,1].
 vals = zeros(1e4, 1);   % To Store Values for Plot Later.
 iter = 1;               % Iteration Counter.
@@ -33,6 +33,7 @@ while (true)
     end
     iter = iter + 1;
 end
+
 values = vals(1:ceil(length(find(vals))/2), :);
 iterations = linspace(1, ceil(length(find(vals))/2), ceil(length(find(vals))/2))';
 
@@ -41,7 +42,7 @@ disp(x_curr);
 
 % Plot values against iterations.
 disp("Plot!")
-plot(iterations, values, '-o')
+semilogy(iterations, values, '-o')
 xlabel('Iterations')
 ylabel('Values')
 title('Values vs Iterations')
