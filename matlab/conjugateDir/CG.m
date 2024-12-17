@@ -9,7 +9,7 @@ b = [1; 1; 1; 1; 1];
 
 % Start point och initialization
 x_k = zeros(5, 1); % Start in origin
-d_k = b - Q * x_k; % Initial residual
+d_k = b - Q * x_k; % Initial direction
 g_k = Q*x_k - b;
 max_iter = 100;
 tolerance = 1e-10;

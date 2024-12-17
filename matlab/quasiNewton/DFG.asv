@@ -1,0 +1,23 @@
+%% DFG -- Davidon Fletcher Powell
+format rat
+A = [2 0
+     0 8];
+b = [4 8]';
+
+f = @(x) 1/2*x'*A*x-b'*x;
+
+xk = [0 0]';
+gk = A*xk - b;
+Dk = [1 0
+      0 1];
+
+alpha_k = gk'*Dk*gk / ( gk'*Dk'*A*Dk*gk )
+
+xnew = xk - alpha_k*Dk*gk
+gnew = A*xnew - b;
+
+pk = xnew - xk;
+qk = gnew - gk;
+Dk = Dk + pk*pk' /
+
+

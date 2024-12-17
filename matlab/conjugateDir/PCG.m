@@ -7,14 +7,13 @@ Q = [1001, 1, 1, 1, 1;
      1, 1, 1, 1, 10];
 b = [1; 1; 1; 1; 1];
 
-H = diag([1/1000, 1/1000, 1/100, 1/100, 1/10]);
-S = inv(H); % Preconditioned matrix
+S = diag([1/1000, 1/1000, 1/100, 1/100, 1/10]);
+H = S*S';
 
 % Start point and initalization
 x_k = zeros(5, 1); % Start in origin
-g_k = b - Q * x_k; % Initial residual
-y_k = S * g_k; % Solve the preconditioned system
-d_k = y_k;
+g_k = Q * x_k - b; % Initial residual
+d_k = -H * g_k;
 max_iter = 100;
 tolerance = 1e-10;
 
@@ -41,26 +40,22 @@ for k = 1:max_iter
     end
 
     % Calc steplength
-    alpha_k = (g_k' * y_k) / (d_k' * Q * d_k);
+    alpha_k = -(g_k' * d_k) / (d_k' * Q * d_k);
 
     % Update sol
     x_k = x_k + alpha_k * d_k;
 
     % Update residual
-    g_new = g_k - alpha_k * Q * d_k;
-
-    % Calc y_k+1
-    y_new = S * g_new;
+    g_new = Q*x_k - b;
 
     % Update beta
-    beta_k = (y_new' * g_new) / (y_k' * g_k);
+    beta_k = (g_new' * H * g_new) / (g_k' * H * g_k);
 
     % Update search direction
-    d_k = y_new + beta_k * d_k;
+    d_k = -H * g_new + beta_k * d_k;
 
     % Prepare next iteration
-    g_k = r_new;
-    y_k = y_new;
+    g_k = g_new;
 end
 
 % Ploa results
@@ -83,3 +78,10 @@ xlabel('Iterations');
 ylabel('||\nabla f(x_k)||');
 title('Convergence of gradient norm (PCG)');
 grid on;
+
+hold off
+disp('Eigenvalues for Q:');
+disp(eig_Q);
+
+disp('Eigenvalues for H*Q:');
+disp(eig_HQ);
