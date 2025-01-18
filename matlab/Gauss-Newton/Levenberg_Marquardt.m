@@ -14,7 +14,7 @@ grad =  @(x) [exp(x(2).*t); x(1).*t.*exp(x(2).*t) ];
 
 % Initial values
 x_k = [2.5, 0.25]'; % Start point
-epsilon = 1e-12;
+epsilon = 1e-6;
 maxIter = 100;
 alpha = 1e0;
 C = 100;
