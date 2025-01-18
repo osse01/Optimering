@@ -4,8 +4,8 @@ using JuMP, LinearAlgebra, Gurobi, Plots
 include("misc.jl")
 
 # Optimization Setup
-max_iter = 100
-tol = 1e-3
+max_iter = 200
+tol = 5e-3
 global mu = 1e0
 slack_weight = 100000
 epsilon = 1e1
@@ -13,13 +13,13 @@ step_size = [(bounds[i][2]-bounds[i][1])/2 for i=1:length(bounds)]
 f_star = profit_function(x_star)
 f_plot = [profit_function(x_k)]
 for iter in 1:max_iter
-    println("\nIteration -------------------------------------------------------------------- $iter\n")
+    println("\nIteration ------------------------------------------------------ $iter\n")
 
     # Formulate LP problem
     model = Model(Gurobi.Optimizer)
 
     @variable(model, -step_size[i] <= d[i=1:10] <= step_size[i]) # Search Directions
-    @variable(model, slack[i=1:11]) # Slack variables
+    @variable(model, slack[i=1:3]) # Slack variables
 
     # Bounds
     for i in 1:10
@@ -27,17 +27,15 @@ for iter in 1:max_iter
         @constraint(model, d[i] + x_k[i] >= bounds[i][1] ) # Lower
     end
 
-    iter = 1
     # Constraints (Inequalities)
     for (con_name, (con_func, grad_func)) in Ineqconstraints
         grad_k = grad_func(x_k)
         f_k = con_func(x_k)
         @constraint(model, f_k + dot(grad_k, d)  >= 0)
-        #iter = iter + 1
     end
 
+    iter = 1 # To enumerate slack variables
     # Constraints (Equalities)
-    
     for (con_name, (con_func, grad_func)) in Eqconstraints
         grad_k = grad_func(x_k)
         f_k = con_func(x_k)
